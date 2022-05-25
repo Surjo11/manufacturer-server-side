@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const cors = require("cors");
 const res = require("express/lib/response");
@@ -32,12 +32,21 @@ async function run() {
       const parts = await cursor.toArray();
       res.send(parts);
     });
+
     // Reviews API
     app.get("/reviews", async (req, res) => {
       const query = {};
       const cursor = reviewCollection.find(query);
       const reviews = await cursor.toArray();
       res.send(reviews);
+    });
+
+    // Part API
+    app.get("/part/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const part = await partCollection.findOne(query);
+      res.send(part);
     });
   } finally {
   }
