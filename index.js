@@ -21,11 +21,23 @@ async function run() {
   try {
     await client.connect();
     const partCollection = client.db("bitbybitmanufacture").collection("parts");
+    const reviewCollection = client
+      .db("bitbybitmanufacture")
+      .collection("reviews");
+
+    // Parts API
     app.get("/parts", async (req, res) => {
       const query = {};
       const cursor = partCollection.find(query);
       const parts = await cursor.toArray();
       res.send(parts);
+    });
+    // Reviews API
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
     });
   } finally {
   }
