@@ -52,17 +52,34 @@ async function run() {
       res.send(part);
     });
 
+    // get orders from server
+    app.get("/orders", async (req, res) => {
+      const query = {};
+      const cursor = orderCollection.find(query);
+      const order = await cursor.toArray();
+      res.send(order);
+    });
+
     // add orders in Server
     app.post("/orders", async (req, res) => {
       const orders = req.body;
       const order = await orderCollection.insertOne(orders);
       res.send(order);
     });
-    // get orders from server
-    app.get("/orders", async (req, res) => {
-      const query = {};
-      const cursor = orderCollection.find(query);
-      const order = await cursor.toArray();
+
+    // get order from server
+    app.get("/order/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const order = await orderCollection.findOne(query);
+      res.send(order);
+    });
+
+    // Delete single order
+    app.delete("/order/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const order = await orderCollection.deleteOne(query);
       res.send(order);
     });
   } finally {
