@@ -24,6 +24,9 @@ async function run() {
     const reviewCollection = client
       .db("bitbybitmanufacture")
       .collection("reviews");
+    const orderCollection = client
+      .db("bitbybitmanufacture")
+      .collection("orders");
 
     // Parts API
     app.get("/parts", async (req, res) => {
@@ -47,6 +50,20 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const part = await partCollection.findOne(query);
       res.send(part);
+    });
+
+    // add orders in Server
+    app.post("/orders", async (req, res) => {
+      const orders = req.body;
+      const order = await orderCollection.insertOne(orders);
+      res.send(order);
+    });
+    // get orders from server
+    app.get("/orders", async (req, res) => {
+      const query = {};
+      const cursor = orderCollection.find(query);
+      const order = await cursor.toArray();
+      res.send(order);
     });
   } finally {
   }
