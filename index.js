@@ -1,8 +1,8 @@
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
-const res = require("express/lib/response");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
@@ -54,10 +54,31 @@ async function run() {
 
     // get orders from server
     app.get("/orders", async (req, res) => {
-      const query = {};
-      const cursor = orderCollection.find(query);
-      const order = await cursor.toArray();
-      res.send(order);
+      let query;
+      if (req.query.email) {
+        const tokenInfo = req.headers.authorization;
+        const decoded = verifyToken(tokenInfo);
+        const email = req.query.email;
+        if (email === decoded.email) {
+          query = { email: email };
+          const cursor = await orderCollection.find(query);
+          const orders = await cursor.toArray();
+          res.send(orders);
+        } else {
+          res.send({ message: "Unauthorize access" });
+        }
+      } else {
+        query = {};
+        const cursor = orderCollection.find(query);
+        const orders = await cursor.toArray();
+        res.send(orders);
+      }
+    });
+
+    app.post("/signin", (req, res) => {
+      const email = req.body;
+      const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
+      res.send({ token });
     });
 
     // add orders in Server
@@ -95,3 +116,17 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log("Listening to PORT", port);
 });
+
+// Verify Token
+function verifyToken(token) {
+  let email;
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      email = "Invalid email";
+    }
+    if (decoded) {
+      email = decoded;
+    }
+  });
+  return email;
+}
