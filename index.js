@@ -27,6 +27,7 @@ async function run() {
     const orderCollection = client
       .db("bitbybitmanufacture")
       .collection("orders");
+    const userCollection = client.db("bitbybitmanufacture").collection("users");
 
     // Parts API
     app.get("/parts", async (req, res) => {
@@ -42,6 +43,19 @@ async function run() {
       const cursor = reviewCollection.find(query);
       const reviews = await cursor.toArray();
       res.send(reviews);
+    });
+
+    // User API
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
     });
 
     // Part API
