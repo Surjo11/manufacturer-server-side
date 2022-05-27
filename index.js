@@ -55,7 +55,31 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
+      res.send({ result, token });
+    });
+
+    // Admin
+    app.put("/user/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
       res.send(result);
+    });
+
+    // Users API
+    app.get("/users", async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
     });
 
     // Part API
@@ -68,31 +92,10 @@ async function run() {
 
     // get orders from server
     app.get("/orders", async (req, res) => {
-      let query;
-      if (req.query.email) {
-        const tokenInfo = req.headers.authorization;
-        const decoded = verifyToken(tokenInfo);
-        const email = req.query.email;
-        if (email === decoded.email) {
-          query = { email: email };
-          const cursor = await orderCollection.find(query);
-          const orders = await cursor.toArray();
-          res.send(orders);
-        } else {
-          res.send({ message: "Unauthorize access" });
-        }
-      } else {
-        query = {};
-        const cursor = orderCollection.find(query);
-        const orders = await cursor.toArray();
-        res.send(orders);
-      }
-    });
-
-    app.post("/signin", (req, res) => {
-      const email = req.body;
-      const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
-      res.send({ token });
+      query = {};
+      const cursor = orderCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
     });
 
     // add orders in Server
@@ -130,17 +133,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log("Listening to PORT", port);
 });
-
-// Verify Token
-function verifyToken(token) {
-  let email;
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
-    if (err) {
-      email = "Invalid email";
-    }
-    if (decoded) {
-      email = decoded;
-    }
-  });
-  return email;
-}
