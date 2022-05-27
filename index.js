@@ -10,6 +10,22 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// verifyToken
+const verifyToken = (req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return res.send({ message: "Unauthorized access" });
+  }
+  const token = auth.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@mongo-first.eblwj.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -91,11 +107,16 @@ async function run() {
     });
 
     // get orders from server
-    app.get("/orders", async (req, res) => {
-      query = {};
-      const cursor = orderCollection.find(query);
-      const orders = await cursor.toArray();
-      res.send(orders);
+    app.get("/orders", verifyToken, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded.email;
+      if (email === decodedEmail) {
+        const cursor = orderCollection.find(query);
+        const orders = await cursor.toArray();
+        res.send(orders);
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
     });
 
     // add orders in Server
