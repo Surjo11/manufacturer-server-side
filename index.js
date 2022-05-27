@@ -109,14 +109,10 @@ async function run() {
     // get orders from server
     app.get("/orders", verifyToken, async (req, res) => {
       const email = req.query.email;
-      const decodedEmail = req.decoded.email;
-      if (email === decodedEmail) {
-        const cursor = orderCollection.find(query);
-        const orders = await cursor.toArray();
-        res.send(orders);
-      } else {
-        return res.status(403).send({ message: "forbidden access" });
-      }
+      const query = { email: email };
+      const cursor = orderCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
     });
 
     // add orders in Server
