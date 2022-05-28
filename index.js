@@ -167,6 +167,13 @@ async function run() {
       const order = await orderCollection.deleteOne(filter);
       res.send(order);
     });
+
+    app.delete("/part/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const part = await partCollection.deleteOne(query);
+      res.send(part);
+    });
   } finally {
   }
 }
