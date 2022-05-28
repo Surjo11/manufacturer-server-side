@@ -45,12 +45,18 @@ async function run() {
       .collection("orders");
     const userCollection = client.db("bitbybitmanufacture").collection("users");
 
-    // Parts API
+    // Parts Get API
     app.get("/parts", async (req, res) => {
       const query = {};
       const cursor = partCollection.find(query);
       const parts = await cursor.toArray();
       res.send(parts);
+    });
+    // Parts Post API
+    app.post("/parts", async (req, res) => {
+      const parts = req.body;
+      const result = await partCollection.insertOne(parts);
+      res.send(result);
     });
 
     // Reviews API
@@ -79,6 +85,13 @@ async function run() {
         }
       );
       res.send({ result, token });
+    });
+
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
     });
 
     // Admin
