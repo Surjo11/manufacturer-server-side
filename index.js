@@ -93,7 +93,7 @@ async function run() {
       );
       res.send({ result, token });
     });
-
+    // Admin API
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
@@ -161,10 +161,10 @@ async function run() {
     });
 
     // Delete single order
-    app.delete("/order/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const order = await orderCollection.deleteOne(query);
+    app.delete("/order/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const order = await orderCollection.deleteOne(filter);
       res.send(order);
     });
   } finally {
