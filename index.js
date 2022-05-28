@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const { request } = require("express");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
@@ -49,7 +50,7 @@ async function run() {
     app.get("/parts", async (req, res) => {
       const query = {};
       const cursor = partCollection.find(query);
-      const parts = await cursor.toArray();
+      const parts = (await cursor.toArray()).reverse();
       res.send(parts);
     });
     // Parts Post API
@@ -59,15 +60,21 @@ async function run() {
       res.send(result);
     });
 
-    // Reviews API
+    // Reviews GET API
     app.get("/reviews", async (req, res) => {
       const query = {};
       const cursor = reviewCollection.find(query);
       const reviews = await cursor.toArray();
       res.send(reviews);
     });
+    // Reviews POST API
+    app.post("/reviews", async (req, res) => {
+      const reviews = req.body;
+      const result = await reviewCollection.insertOne(reviews);
+      res.send(result);
+    });
 
-    // User API
+    // User PUT API
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
@@ -105,10 +112,20 @@ async function run() {
       res.send(result);
     });
 
-    // Users API
+    // Users GET API|
     app.get("/users", async (req, res) => {
-      const users = await userCollection.find().toArray();
-      res.send(users);
+      console.log(req.query.email);
+      let query;
+      if (req.query.email) {
+        const email = req.query.email;
+        query = { email: email };
+        const user = await userCollection.findOne(query);
+        res.send(user);
+      } else {
+        query = {};
+        const user = await userCollection.find(query).toArray();
+        res.send(user);
+      }
     });
 
     // Part API
